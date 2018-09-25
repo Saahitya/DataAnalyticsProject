@@ -1,0 +1,27 @@
+```{r}
+my_data<-read.csv('Accident_Information.csv')
+summary(my_data)
+```
+```{r}
+day_wise_accidents<-aggregate(Accident_Index~Day_of_Week+Accident_Severity,my_data,length)
+print(day_wise_accidents)
+library(ggplot2)
+ggplot(day_wise_accidents, aes(fill=Accident_Severity, y=Accident_Index, x=Day_of_Week)) + 
+  geom_bar(position="dodge", stat="identity")+labs(x="Day of Week",title="Number, type of accidents accross different Days of week",y="Number of Accidents")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1,vjust = 1,size = 8))
+```
+```{r}
+data_2012<-my_data[my_data$Year==2012,]
+library(rworldmap)
+newmap <- getMap(resolution = "high")
+plot(newmap, xlim = c(-3, 2), ylim = c(50, 59),asp = 1)
+title("Spread of Accidents accross U.K in 2012")
+points(data_2012$Longitude, data_2012$Latitude, col = "red", cex = .1)
+```
+```{r}
+year_wise_accidents<-aggregate(Accident_Index~Year,my_data,length)
+ggplot(year_wise_accidents, aes( y=Accident_Index, x=Year)) + 
+  geom_bar(position="dodge", stat="identity")+labs(x="Year",title="Number of accidents vs Years",y="Number of Accidents")+
+  theme(axis.text.x = element_text( hjust = 1,vjust = 1,size = 8))
+```
+
