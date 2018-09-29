@@ -1,0 +1,100 @@
+---
+title: "explaratory_data_analysis"
+author: "saahityae"
+date: "25 September 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir="~/Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyticsProject/")
+```
+
+```{r}
+library(tidyverse)
+```
+```{r}
+
+```
+
+```{r}
+getwd()
+#setwd("~/Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyticsProject/")
+setwd("..")
+getwd()
+```
+```{r}
+list.files("data/")
+```
+```{r}
+system.time(Accident_data <- read.csv("data/Accident_Information.csv.bz2"))
+system.time(Vehicle_data <- read.csv("data//Vehicle_Information.csv.bz2"))
+```
+```{r}
+str(Accident_data)
+```
+```{r}
+summary(Accident_data)
+```
+```{r}
+sapply(Accident_data, class)
+```
+```{r}
+ggplot(data = Accident_data, mapping=aes(x=Number_of_Casualties))+geom_histogram(binwidth = 1)
+boxplot(Accident_data$Number_of_Casualties) #even the 2's are being considered as outliers, Why is 1 the most common value
+count(Accident_data, Number_of_Casualties == 1)
+```
+Series of Accident data variations across Years, etc
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Accident_Severity))+geom_freqpoly(binwidth=1)
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x=Year, color=Junction_Detail))+geom_freqpoly(binwidth=1)
+#not at junction or within 20 metres has shown atleast 25% fall
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Urban_or_Rural_Area))+geom_freqpoly(binwidth=1)
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Road_Type))+geom_freqpoly(binwidth=1)
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Weather_Conditions))+geom_freqpoly(binwidth=1)
+
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Road_Surface_Conditions))+geom_freqpoly(binwidth=1)
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Day_of_Week))+geom_freqpoly(binwidth=1)
+```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Junction_Control))+geom_freqpoly(binwidth=1)
+```
+
+```{r}
+ggplot(Accident_data, aes(x=Latitude))+geom_histogram() #lattitude of london is 51.5
+```
+```{r}
+ggplot(Accident_data, aes(x=Local_Authority_.District.))+geom_bar()  #bad viz
+group_by(Accident_data, Local_Authority_.District.) %>%
+  summarise(n = n()) %>% arrange(n)
+```
+```{r}
+group_by(Accident_data, Local_Authority_.Highway.) %>%
+  summarise(n = n()) %>% arrange(n)
+```
+
+```{r}
+ggplot(data = Accident_data) +
+  geom_count(mapping = aes(x = Local_Authority_.District., y = Local_Authority_.Highway.))
+Accident_data %>% filter(Local_Authority_.District. != Local_Authority_.Highway.) %>% nrow()
+```
+
+```{r}
+
+```
+
+
+
+
