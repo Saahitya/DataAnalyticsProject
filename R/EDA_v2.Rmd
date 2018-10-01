@@ -14,15 +14,9 @@ knitr::opts_knit$set(root.dir="~/Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyti
 library(tidyverse)
 ```
 ```{r}
-
+library(hexbin)
 ```
 
-```{r}
-getwd()
-#setwd("~/Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyticsProject/")
-setwd("..")
-getwd()
-```
 ```{r}
 list.files("data/")
 ```
@@ -60,11 +54,19 @@ ggplot(data = Accident_data, mapping = aes(x = Year, color = Road_Type))+geom_fr
 ```
 ```{r}
 ggplot(data = Accident_data, mapping = aes(x = Year, color = Weather_Conditions))+geom_freqpoly(binwidth=1)
-
 ```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Weather_Conditions, y = ..density.. ))+geom_freqpoly(binwidth=1)
+```
+
 ```{r}
 ggplot(data = Accident_data, mapping = aes(x = Year, color = Road_Surface_Conditions))+geom_freqpoly(binwidth=1)
 ```
+```{r}
+ggplot(data = Accident_data, mapping = aes(x = Year, color = Road_Surface_Conditions, y = ..density.. ))+geom_freqpoly(binwidth=1)
+
+```
+
 ```{r}
 ggplot(data = Accident_data, mapping = aes(x = Year, color = Day_of_Week))+geom_freqpoly(binwidth=1)
 ```
@@ -76,8 +78,8 @@ ggplot(data = Accident_data, mapping = aes(x = Year, color = Junction_Control))+
 ggplot(Accident_data, aes(x=Latitude))+geom_histogram() #lattitude of london is 51.5
 ```
 ```{r}
-ggplot(Accident_data, aes(x=Local_Authority_.District.))+geom_bar()  #bad viz
-group_by(Accident_data, Local_Authority_.District.) %>%
+#ggplot(Accident_data, aes(x=Local_Authority_.District.))+geom_bar()  #bad viz
+#group_by(Accident_data, Local_Authority_.District.) %>%
   summarise(n = n()) %>% arrange(n)
 ```
 ```{r}
@@ -90,11 +92,24 @@ ggplot(data = Accident_data) +
   geom_count(mapping = aes(x = Local_Authority_.District., y = Local_Authority_.Highway.))
 Accident_data %>% filter(Local_Authority_.District. != Local_Authority_.Highway.) %>% nrow()
 ```
-
 ```{r}
-
+ggplot(data = Accident_data[Accident_data$Carriageway_Hazards != 'None', ]) +
+  geom_count(mapping = aes(x = Accident_Severity, y = Carriageway_Hazards))
 ```
-
-
-
+```{r}
+ggplot(data = Accident_data[Accident_data$Accident_Severity != 'Slight', ]) +
+  geom_count(mapping = aes(x = Accident_Severity, y = Day_of_Week))
+```
+```{r}
+ggplot(data = Accident_data[Accident_data$Carriageway_Hazards != 'None', ]) +
+  geom_count(mapping = aes(x = Accident_Severity, y = Road_Surface_Conditions))
+```
+```{r}
+ggplot(data = Accident_data[Accident_data$Light_Conditions != 'Darkness - lighting unknown', ]) +
+  geom_point(mapping = aes(x = Latitude, y = Longitude, color = Light_Conditions), alpha = 0.01) + guides(colour = guide_legend(override.aes = list(alpha = 1)))
+```
+```{r}
+ggplot(data = Accident_data) +
+  geom_point(mapping = aes(x = X1st_Road_Number, y = X2nd_Road_Number), alpha = 0.007)
+```
 
