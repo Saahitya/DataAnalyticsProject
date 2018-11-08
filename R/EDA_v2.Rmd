@@ -139,20 +139,3 @@ library(leaflet)
 m = leaflet() %>% addTiles() 
 m %>% addPolygons(lng = contrib.pc.fin.dt$lng[1:5243] , lat = contrib.pc.fin.dt$lat[1:5243] , fillColor = "blue" , color = "black", weight = 1)
 ```
-```{r}
-m = leaflet()
-m <- addTiles(m)
-m<- addMarkers(m, lng=174.768, lat=-36.852, popup="The birthplace of R")
-m
-```
-```{r}
-library(maps)
-```
-
-```{r}
-names(providers)
-```
-```{r}
-
-```
-
