@@ -1,0 +1,52 @@
+```{r}
+my_data<-read.csv('Accident_Information.csv')
+summary(my_data)
+```
+
+```{r}
+install.packages("devtools")
+library(devtools)
+library(easyGgplot2)
+install.packages("easyGgplot2")
+install_github("easyGgplot2", "kassambara")
+
+#table(my_data$Accident_Severity)
+library(ggplot2)
+cities<-aggregate(Accident_Index~Local_Authority_.District.+Accident_Severity,my_data,length)
+
+total<-aggregate(Accident_Index~Local_Authority_.District.,my_data,length)
+
+trial<-merge(x = cities,y = total,all = T)
+
+cities$total<-NA
+
+for (i in seq(nrow(cities))) {
+  cities[i,"total"]<-total[total$Local_Authority_.District.==cities[i,"Local_Authority_.District."],"Accident_Index"]
+}
+
+cities$percentage<-cities$Accident_Index/cities$total
+
+fatal<-cities[cities$Accident_Severity=="Fatal" | cities$Accident_Severity=="Serious",]
+ggplot(fatal, aes(fill=Accident_Severity, y=percentage, x=Local_Authority_.District.)) + 
+    geom_bar(position="dodge", stat="identity")
+
+max_fatal<-max(fatal[fatal$Accident_Severity=="Fatal","percentage"])
+max_serious<-max(fatal[fatal$Accident_Severity=="Serious","percentage"])
+
+fatal[fatal$percentage == max_fatal & fatal$Accident_Severity=="Fatal",]
+fatal[fatal$percentage == max_serious,]
+ggplot(cities, aes(fill=Accident_Severity, y=percentage, x=Local_Authority_.District.)) + 
+    geom_bar(position="dodge", stat="identity")
+```
+
+```{r}
+ggplot(my_data[my_data$Local_Authority_.District.=="Ryedale",],aes(x = Latitude,y= Longitude)) + geom_point(col=ifelse(my_data$Accident_Severity=="Slight", "red", "blue"))
+
+scatterplot(data=my_data[my_data$Local_Authority_.District.=="Ryedale",], xName='Latitude',yName='Longitude',
+                    groupName="Accident_Severity")
+```
+
+```{r}
+cities[5,"Accident_Index"]
+```
+

@@ -1,0 +1,170 @@
+```{r}
+library(ggmap)
+qmap(location = "boston university")
+library(gmapsdistance)
+api_key_<-'<AIzaSyDh0wORZxz1eRcdyOXXgpM-PceD2Z7Ubgc>'
+qmap(location = "baylor university", zoom = 14, maptype = 15434,
+  source = "cloudmade",api_key = api_key_)
+
+get_map(location = c(lon = -95.3632715, lat = 29.7632836),api_key = api_key_)
+
+map <- get_cloudmademap(api_key = api_key_)
+library(RgoogleMaps)
+
+map1 <- GetMap(markers = paste0(
+"&markers=color:blue|label:S|40.702147,-74.015794",
+"&markers=color:green|label:G|40.711614,-74.012318",
+"&markers=color:red|color:red|label:C|40.718217,-73.998284"),
+center=NULL,destfile = "MyTile1.png",size=c(640,640),
+maptype = "terrain")
+
+devtools::install_github("dkahle/ggmap")
+register_google()
+```
+
+```{r}
+library(RCurl)
+library(RJSONIO)
+library(plyr)
+ 
+url <- function(address, return.call = "json", sensor = "false") {
+ root <- "http://maps.google.com/maps/api/geocode/"
+ u <- paste(root, return.call, "?address=", address, "&sensor=", sensor, sep = "")
+ return(URLencode(u))
+}
+ 
+geoCode <- function(address,verbose=FALSE) {
+ if(verbose) cat(address,"\n")
+ u <- url(address)
+ doc <- getURL(u)
+ x <- fromJSON(doc,simplify = FALSE)
+ if(x$status=="OK") {
+ lat <- x$results[[1]]$geometry$location$lat
+ lng <- x$results[[1]]$geometry$location$lng
+ location_type <- x$results[[1]]$geometry$location_type
+ formatted_address <- x$results[[1]]$formatted_address
+ return(c(lat, lng, location_type, formatted_address))
+ } else {
+ return(c(NA,NA,NA, NA))
+ }
+}
+
+address <- geoCode("The White House, Washington, DC")
+```
+
+```{r}
+get_map(location = c(lon = -95.3632715, lat = 29.7632836), zoom = "auto",
+scale = "auto", maptype ="terrain",messaging = FALSE, urlonly = FALSE,source == "google", filename = "ggmapTemp",
+crop = TRUE, color = c("color", "bw"), language = "en-EN", api_key)
+
+register_google(key = api_key)
+
+atw<- get_map(location=c(-88.68,42.14), zoom=10, scale=2)
+```
+
+```{r}
+library("leaflet")
+library("data.table")
+library("sp")
+#library("rgdal")
+# library("maptools")
+library("KernSmooth")
+
+inurl <- "https://data.cityofchicago.org/api/views/22s8-eq8h/rows.csv?accessType=DOWNLOAD"
+infile <- "mvthefts.csv"
+
+## LOAD DATA
+## Also, clean up variable names, and convert dates
+if(!file.exists(infile)){
+    download.file(url = inurl, destfile = infile)
+}
+dat <- data.table::fread(infile)
+setnames(dat, tolower(colnames(dat)))
+setnames(dat, gsub(" ", "_", colnames(dat)))
+dat <- dat[!is.na(longitude)]
+dat[ , date := as.IDate(date, "%m/%d/%Y")]
+
+## MAKE CONTOUR LINES
+## Note, bandwidth choice is based on MASS::bandwidth.nrd()
+kde <- bkde2D(dat[ , list(longitude, latitude)],
+              bandwidth=c(.0045, .0068), gridsize = c(100,100))
+
+```
+
+```{r}
+CL <- contourLines(kde$x1 , kde$x2 , kde$fhat)
+
+## EXTRACT CONTOUR LINE LEVELS
+LEVS <- as.factor(sapply(CL, `[[`, "level"))
+NLEV <- length(levels(LEVS))
+
+## CONVERT CONTOUR LINES TO POLYGONS
+pgons <- lapply(1:length(CL), function(i)
+    Polygons(list(Polygon(cbind(CL[[i]]$x, CL[[i]]$y))), ID=i))
+spgons = SpatialPolygons(pgons)
+
+## Leaflet map with polygons
+leaflet(spgons) %>% addTiles() %>% 
+    addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+```
+
+```{r}
+accident_data <- read.csv("Accident_Information.csv")
+
+```
+
+```{r}
+
+library(MASS)
+library(tidyverse)
+library(ggtern)
+
+accident_data <- drop_na(accident_data, Latitude)
+accident_data <- drop_na(accident_data, Longitude)
+
+```
+
+```{r}
+add.alpha <- function(COLORS, ALPHA){
+ if(missing(ALPHA)) stop("provide a value for alpha between 0 and 1")
+ RGB <- col2rgb(COLORS, alpha=TRUE)
+ RGB[4,] <- round(RGB[4,]*ALPHA)
+ NEW.COLORS <- rgb(RGB[1,], RGB[2,], RGB[3,], RGB[4,], maxColorValue = 255)
+ return(NEW.COLORS)
+}
+
+```
+
+```{r}
+ryedale_data <- accident_data[accident_data$Local_Authority_.District.=="Ryedale",]
+ryedale_data$w1 <- NA
+ryedale_data[ryedale_data$Accident_Severity == "Fatal", "w1"] <- 3
+ryedale_data[ryedale_data$Accident_Severity == "Serious", "w1"] <- 2
+ryedale_data[ryedale_data$Accident_Severity == "Slight", "w1"] <- 1
+f1 <- kde2d(ryedale_data$Latitude, ryedale_data$Longitude, n = 1000)
+w1_f2 <- kde2d.weighted(ryedale_data$Latitude, ryedale_data$Longitude, n = 1000, w = ryedale_data$w1)
+pal <- rainbow(20)
+COLORS <- add.alpha(pal, 1)
+par(pty = "s", mfrow = c(1, 2))
+image(f1, col = COLORS)
+image(w1_f2, col = COLORS)
+
+```
+
+```{r}
+CL <- contourLines(w1_f2$y , w1_f2$x , w1_f2$z)
+
+## EXTRACT CONTOUR LINE LEVELS
+LEVS <- as.factor(sapply(CL, `[[`, "level"))
+NLEV <- length(levels(LEVS))
+
+## CONVERT CONTOUR LINES TO POLYGONS
+pgons <- lapply(1:length(CL), function(i)
+    Polygons(list(Polygon(cbind(CL[[i]]$x, CL[[i]]$y))), ID=i))
+spgons = SpatialPolygons(pgons)
+
+## Leaflet map with polygons
+leaflet(spgons) %>% addTiles() %>% 
+    addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+```
+
