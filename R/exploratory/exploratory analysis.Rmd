@@ -7,6 +7,7 @@ output: pdf_document
 Importing libraries
 ```{r}
 library(tidyverse)
+library(lubridate)
 ```
 
 
@@ -128,8 +129,11 @@ INSIGHTS ABOUT SEVERITY BASED ON AGE-GROUP OF DRIVER AND GENDER
 ```{r}
 severityData3 <- subset(accData,select = c("Accident_Index","Accident_Severity"))
 
-genderAge <- subset(vehData,select = c("Accident_Index","Sex_of_Driver","Age_Band_of_Driver"))%>%
-  filter(Sex_of_Driver %in% c("Male","Female") & Age_Band_of_Driver != "Data missing or out of range")
+validGender <- c("Male","Female")
+
+selection <- c("Accident_Index","Sex_of_Driver","Age_Band_of_Driver")
+genderAge <- subset(vehData,select = selection)%>%
+  filter(Sex_of_Driver %in% validGender & Age_Band_of_Driver != "Data missing or out of range")
 
 severityGender3 <- inner_join(severityData3,genderAge)
 
@@ -149,13 +153,92 @@ plt
 
 ```{r}
 
+#from_acc_data <- subset(accData,select = c("Accident_Index","Accident_Severity","Gender"))%>%
+
+selection <- c("Accident_Index","Driver_Home_Area_Type",
+               "Age_Band_of_Driver","Engine_Capacity_.CC.",
+               "Journey_Purpose_of_Driver","Vehicle_Manoeuvre","Year")
+
+driver_loc <- subset(vehData,select = selection)%>%
+  filter(!is.na(Accident_Index))
+
+head(driver_loc)
+use_less_purpose <- c("Data missing or out of range","Not known","Other/Not known (2005-10)")
+
+clean_loc <- driver_loc%>%
+  filter(!(Journey_Purpose_of_Driver %in% use_less_purpose))
+plt2 <- ggplot(data = clean_loc,aes(x = Journey_Purpose_of_Driver))+theme_classic()
+plt2+geom_bar()
+
+```
+
+```{r}
+head(vehData)
+```
+
+```{r}
+names(accData)
+```
+```{r}
+ts <- accData$Time
+ts <- as.character(ts)
+ts <- as.numeric(substr(ts,1,2))
+head(ts)
+
+accData$Time <- ts
+
+evening <- c(16:20)
+afternoon <- c(12:15)
+morning <- c(6:11)
+night <- c(21:23,0:5)
+
+accData$even <- ifelse(accData$Time %in% evening,1,0)
+accData$night <- ifelse(accData$Time %in% night,1,0)
+accData$after <- ifelse(accData$Time %in% afternoon,1,0)
+accData$morn <- ifelse(accData$Time %in% morning,1,0)
+head(accData)
+
+
+
+```
+
+
+```{r}
+
+eve_data <- accData%>%
+  filter(accData$even == 1)
+eve_data$Time = "evening"
+
+after_data <- accData%>%
+  filter(accData$after == 1)
+after_data$Time = "afternoon"
+night_data <- accData%>%
+  filter(accData$night == 1)
+night_data$Time = "afternoon"
+morn_data <- accData%>%
+  filter(accData$morn == 1)
+morn_data$Time = "morning"
+new_accData <- rbind(eve_data,after_data)
+new_accData <- rbind(new_accData,night_data)
+new_accData <- rbind(new_accData,morn_data)
+
+new_accData$even = NULL
+new_accData$night =NULL
+new_accData$after = NULL
+new_accData$morn = NULL
 ```
 
 ```{r}
 
-```
+veh_time <- inner_join(new_accData,vehData)
+validGender <- c("Male","Female")
+veh_time <- veh_time%>%
+  filter(Sex_of_Driver %in% validGender)
+names(veh_time)
+plt <- ggplot(veh_time,aes(x = Time,fill = Sex_of_Driver))+geom_bar()
+plt <- plt + labs(title = "Time of accidents")
+plt
 
-```{r}
 
 ```
 

@@ -1,25 +1,27 @@
+
+
 ```{r}
-library(ggmap)
-qmap(location = "boston university")
-library(gmapsdistance)
-api_key_<-'<AIzaSyDh0wORZxz1eRcdyOXXgpM-PceD2Z7Ubgc>'
-qmap(location = "baylor university", zoom = 14, maptype = 15434,
-  source = "cloudmade",api_key = api_key_)
+#library(ggmap)
+#qmap(location = "boston university")
+#library(gmapsdistance)
+#api_key_<-'<AIzaSyDh0wORZxz1eRcdyOXXgpM-PceD2Z7Ubgc>'
+#qmap(location = "baylor university", zoom = 14, maptype = 15434,
+  #source = "cloudmade",api_key = api_key_)
 
-get_map(location = c(lon = -95.3632715, lat = 29.7632836),api_key = api_key_)
+#get_map(location = c(lon = -95.3632715, lat = 29.7632836),api_key = api_key_)
 
-map <- get_cloudmademap(api_key = api_key_)
-library(RgoogleMaps)
+#map <- get_cloudmademap(api_key = api_key_)
+#library(RgoogleMaps)
 
-map1 <- GetMap(markers = paste0(
-"&markers=color:blue|label:S|40.702147,-74.015794",
-"&markers=color:green|label:G|40.711614,-74.012318",
-"&markers=color:red|color:red|label:C|40.718217,-73.998284"),
-center=NULL,destfile = "MyTile1.png",size=c(640,640),
-maptype = "terrain")
+#map1 <- GetMap(markers = paste0(
+#"&markers=color:blue|label:S|40.702147,-74.015794",
+#"&markers=color:green|label:G|40.711614,-74.012318",
+#"&markers=color:red|color:red|label:C|40.718217,-73.998284"),
+#center=NULL,destfile = "MyTile1.png",size=c(640,640),
+#maptype = "terrain")
 
-devtools::install_github("dkahle/ggmap")
-register_google()
+#devtools::install_github("dkahle/ggmap")
+#register_google()
 ```
 
 ```{r}
@@ -27,40 +29,41 @@ library(RCurl)
 library(RJSONIO)
 library(plyr)
  
-url <- function(address, return.call = "json", sensor = "false") {
- root <- "http://maps.google.com/maps/api/geocode/"
- u <- paste(root, return.call, "?address=", address, "&sensor=", sensor, sep = "")
- return(URLencode(u))
-}
+#url <- function(address, return.call = "json", sensor = "false") {
+# root <- "http://maps.google.com/maps/api/geocode/"
+# u <- paste(root, return.call, "?address=", address, "&sensor=", sensor, sep = "")
+# return(URLencode(u))
+#}
  
-geoCode <- function(address,verbose=FALSE) {
- if(verbose) cat(address,"\n")
- u <- url(address)
- doc <- getURL(u)
- x <- fromJSON(doc,simplify = FALSE)
- if(x$status=="OK") {
- lat <- x$results[[1]]$geometry$location$lat
- lng <- x$results[[1]]$geometry$location$lng
- location_type <- x$results[[1]]$geometry$location_type
- formatted_address <- x$results[[1]]$formatted_address
- return(c(lat, lng, location_type, formatted_address))
- } else {
- return(c(NA,NA,NA, NA))
- }
-}
+#geoCode <- function(address,verbose=FALSE) {
+# if(verbose) cat(address,"\n")
+# u <- url(address)
+# doc <- getURL(u)
+# x <- fromJSON(doc,simplify = FALSE)
+# if(x$status=="OK") {
+# lat <- x$results[[1]]$geometry$location$lat
+# lng <- x$results[[1]]$geometry$location$lng
+# location_type <- x$results[[1]]$geometry$location_type
+# formatted_address <- x$results[[1]]$formatted_address
+# return(c(lat, lng, location_type, formatted_address))
+# } else {
+# return(c(NA,NA,NA, NA))
+# }
+#}
 
-address <- geoCode("The White House, Washington, DC")
+#address <- geoCode("The White House, Washington, DC")
 ```
 
 ```{r}
-get_map(location = c(lon = -95.3632715, lat = 29.7632836), zoom = "auto",
-scale = "auto", maptype ="terrain",messaging = FALSE, urlonly = FALSE,source == "google", filename = "ggmapTemp",
-crop = TRUE, color = c("color", "bw"), language = "en-EN", api_key)
+#get_map(location = c(lon = -95.3632715, lat = 29.7632836), zoom = "auto",
+#scale = "auto", maptype ="terrain",messaging = FALSE, urlonly = FALSE,source == "google", filename = "ggmapTemp",
+#crop = TRUE, color = c("color", "bw"), language = "en-EN", api_key)
 
-register_google(key = api_key)
+#register_google(key = api_key)
 
-atw<- get_map(location=c(-88.68,42.14), zoom=10, scale=2)
+#atw<- get_map(location=c(-88.68,42.14), zoom=10, scale=2)
 ```
+'''
 
 ```{r}
 library("leaflet")
@@ -109,20 +112,86 @@ leaflet(spgons) %>% addTiles() %>%
 ```
 
 ```{r}
-accident_data <- read.csv("Accident_Information.csv")
+library(tidyverse)
+library(ggmap)
+library(MASS)
+library(gridExtra)
+library(ggtern)
+library(leaflet)
+```
+
+```{r}
+dacc <- read_csv("../../Accident_Information.csv")
+dveh <- read_csv("../../Vehicle_Information.csv")
+
+accident_data <- dacc
+vehicle_data <- dveh
+district = NULL
+
+```
+
+
+
+```{r}
+
+accident_data <- drop_na(accident_data, Latitude)
+accident_data <- drop_na(accident_data, Longitude)
+
+  accident_data$Accident_Severity = factor(accident_data$Accident_Severity,order = TRUE,levels = c("Slight","Serious","Fatal"))
+  accident_data[["1st_Road_Class"]] = factor(accident_data[["1st_Road_Class"]])
+  accident_data$Light_Conditions = factor(accident_data$Light_Conditions)
+  accident_data$Day_of_Week = factor(accident_data$Day_of_Week)
+  accident_data$Urban_or_Rural_Area = factor(accident_data$Urban_or_Rural_Area)
+  accident_data$Weather_Conditions = factor(accident_data$Weather_Conditions)
+  accident_data$Junction_Control = factor(accident_data$Junction_Control)
+  accident_data$Road_Surface_Conditions = factor(accident_data$Road_Surface_Conditions)
+  accident_data$Road_Type = factor(accident_data$Road_Type)
+  accident_data$InScotland = factor(accident_data$InScotland)
+  accident_data$Carriageway_Hazards = factor(accident_data$Carriageway_Hazards)
+  accident_data[["2nd_Road_Class"]] = factor(accident_data[["2nd_Road_Class"]])
+  accident_data$Special_Conditions_at_Site = factor(accident_data$Special_Conditions_at_Site)
+  accident_data$Police_Force = factor(accident_data$Police_Force)
+  #str(accident_data)
+
+  vehicle_data$Age_Band_of_Driver = factor(vehicle_data$Age_Band_of_Driver,order = "TRUE", levels = c( "Data missing or out of range",
+                                                                                             "0 - 5", "6 - 10", "11 - 15", "16 - 20",
+                                                                                             "21 - 25", "26 - 35", "36 - 45", 
+                                                                                             "46 - 55","56 - 65", "66 - 75", "Over 75"))
+  vehicle_data$Driver_Home_Area_Type = factor(vehicle_data$Driver_Home_Area_Type)
+  vehicle_data$Propulsion_Code = factor(vehicle_data$Propulsion_Code)
+  vehicle_data$Sex_of_Driver = factor(vehicle_data$Sex_of_Driver)
+  vehicle_data$Skidding_and_Overturning = factor(vehicle_data$Skidding_and_Overturning)
+  vehicle_data$Vehicle_Manoeuvre = factor(vehicle_data$Vehicle_Manoeuvre)
+  vehicle_data$X1st_Point_of_Impact = factor(vehicle_data$X1st_Point_of_Impact)
+  vehicle_data$make = factor(vehicle_data$make)
+  vehicle_data$Vehicle_Leaving_Carriageway = factor(vehicle_data$Vehicle_Leaving_Carriageway)
+  vehicle_data$Towing_and_Articulation = factor(vehicle_data$Towing_and_Articulation)
+  #str(vehicle_data)
+
+
+```
+
+```{r}
+names(accident_data)[15] = "Local_Authority_.District."
+names(accident_data)[16] = "Local_Authority_.Highway."
+```
+
+```{r}
+
+DMOR = "Data missing or out of range"
+void_weather = c("(Other)", "Other", "Unknown")
+void_common = c("None", "Data missing or out of range","None","Other","NA","Unknown","(Other)","Unclassified","Not known")
+void_road = c("Unknown")
+void_froad = c("Unclassified")
 
 ```
 
 ```{r}
 
-library(MASS)
-library(tidyverse)
-library(ggtern)
-
-accident_data <- drop_na(accident_data, Latitude)
-accident_data <- drop_na(accident_data, Longitude)
+accident_data["2nd_Road_Class"] = NULL
 
 ```
+
 
 ```{r}
 add.alpha <- function(COLORS, ALPHA){
@@ -136,35 +205,71 @@ add.alpha <- function(COLORS, ALPHA){
 ```
 
 ```{r}
-ryedale_data <- accident_data[accident_data$Local_Authority_.District.=="Ryedale",]
-ryedale_data$w1 <- NA
-ryedale_data[ryedale_data$Accident_Severity == "Fatal", "w1"] <- 3
-ryedale_data[ryedale_data$Accident_Severity == "Serious", "w1"] <- 2
-ryedale_data[ryedale_data$Accident_Severity == "Slight", "w1"] <- 1
-f1 <- kde2d(ryedale_data$Latitude, ryedale_data$Longitude, n = 1000)
-w1_f2 <- kde2d.weighted(ryedale_data$Latitude, ryedale_data$Longitude, n = 1000, w = ryedale_data$w1)
-pal <- rainbow(20)
-COLORS <- add.alpha(pal, 1)
-par(pty = "s", mfrow = c(1, 2))
-image(f1, col = COLORS)
-image(w1_f2, col = COLORS)
+KDPL <- function(nos){
+  ryedale_data <- accident_data[accident_data$Local_Authority_.District. == district,]
+  ryedale_data$w1 <- NA
+  ryedale_data[ryedale_data$Accident_Severity == "Fatal", "w1"] <- 3
+  ryedale_data[ryedale_data$Accident_Severity == "Serious", "w1"] <- 2
+  ryedale_data[ryedale_data$Accident_Severity == "Slight", "w1"] <- 1
+  f1 <- kde2d(ryedale_data$Latitude, ryedale_data$Longitude, n = nos)
+  w1_f2 <- kde2d.weighted(ryedale_data$Latitude, ryedale_data$Longitude, n = nos, w = ryedale_data$w1)
+  pal <- rainbow(20)
+  COLORS <- add.alpha(pal, 1)
+  par(pty = "s", mfrow = c(1, 2))
+  image(f1, col = COLORS)
+  image(w1_f2, col = COLORS)
+  
+  CL <- contourLines(w1_f2$y , w1_f2$x , w1_f2$z)
+  
+  ## EXTRACT CONTOUR LINE LEVELS
+  LEVS <- as.factor(sapply(CL, `[[`, "level"))
+  NLEV <- length(levels(LEVS))
+  
+  ## CONVERT CONTOUR LINES TO POLYGONS
+  pgons <- lapply(1:length(CL), function(i)
+      Polygons(list(Polygon(cbind(CL[[i]]$x, CL[[i]]$y))), ID=i))
+  spgons = SpatialPolygons(pgons)
+  
+  ## Leaflet map with polygons
+  leaflet(spgons) %>% addTiles() %>% 
+      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+  #return (w1_f2)
+}
+
+```
+
+
+
+
+```{r}
+
+head(accident_data$Local_Authority_.District.)
+district = accident_data$Local_Authority_.District.[1]
+system.time(KDPL(1000))
 
 ```
 
 ```{r}
-CL <- contourLines(w1_f2$y , w1_f2$x , w1_f2$z)
 
-## EXTRACT CONTOUR LINE LEVELS
-LEVS <- as.factor(sapply(CL, `[[`, "level"))
-NLEV <- length(levels(LEVS))
+```
 
-## CONVERT CONTOUR LINES TO POLYGONS
-pgons <- lapply(1:length(CL), function(i)
-    Polygons(list(Polygon(cbind(CL[[i]]$x, CL[[i]]$y))), ID=i))
-spgons = SpatialPolygons(pgons)
+```{r}
 
-## Leaflet map with polygons
-leaflet(spgons) %>% addTiles() %>% 
-    addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
 ```
 
