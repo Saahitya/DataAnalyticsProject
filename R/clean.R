@@ -1,8 +1,6 @@
 library(tidyverse)
-setwd("Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyticsProject/")
-getwd()
-vehicle_data <- read.csv("data/Vehicle_Information.csv.bz2")
-accident_data <- read.csv("data/Accident_Information.csv.bz2")
+vehicle_data <- read.csv("../data/Vehicle_Information.csv.bz2")
+accident_data <- read.csv("../data/Accident_Information.csv.bz2")
 summary(vehicle_data)
 #cleaning accident_data
 summary(accident_data)

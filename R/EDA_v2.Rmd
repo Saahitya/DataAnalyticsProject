@@ -5,32 +5,34 @@ date: "25 September 2018"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+library(hexbin)
+library(tidyverse)
+library(ggmap)
+library(DataExplorer)
+library(MASS)
+library(gridExtra)
+library(ggtern)
+library(leaflet)
+library(mice)
+library(data.table)
+library(sp)
+library(RCurl)
+library(RJSONIO)
+library(KernSmooth)
+library(lubridate)
+
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir="~/Desktop/5th-SEM-Stuff/DataAnalytics/DataAnalyticsProject/")
 ```
 
 ```{r}
-library(tidyverse)
-```
-```{r}
-vehicle_data <- read.csv("../DataAnalyticsProject/data/Vehicle_Information.csv.bz2")
-```
-
-```{r}
-summary(vehicle_data)
-```
-
-```{r}
-library(hexbin)
-```
-
-```{r}
-list.files("data/")
-```
-```{r}
-#system.time(accident_data <- read.csv("data/Accident_Information.csv.bz2"))
-#system.time(Vehicle_data <- read.csv("data//Vehicle_Information.csv.bz2"))
+system.time(accident_data <- read.csv("../data/Accident_Information.csv.bz2"))
+system.time(Vehicle_data <- read.csv("../data//Vehicle_Information.csv.bz2"))
 ```
 
 ```{r}
@@ -86,9 +88,7 @@ ggplot(data = accident_data%>%filter(Weather_Conditions != "Data missing or out 
   #geom_freqpoly(binwidth=1)
 ```
 
-```{r}
 
-```
 
 ```{r}
 ggplot(data = accident_data, mapping = aes(x = Year, color = Road_Surface_Conditions))+geom_freqpoly(binwidth=1)
@@ -114,12 +114,6 @@ ggplot(data = accident_data, mapping = aes(x = Year, color = Junction_Control))+
 
 ```{r}
 ggplot(accident_data, aes(x=Latitude))+geom_histogram()+labs(title="Accidents by latitude") #lattitude of london is 51.5
-```
-
-```{r}
-#ggplot(accident_data, aes(x=Local_Authority_.District.))+geom_bar()  #bad viz
-#group_by(accident_data, Local_Authority_.District.) %>%
-  #summarise(n = n()) %>% arrange(n)
 ```
 
 ```{r}
@@ -160,16 +154,3 @@ ggplot(data = accident_data[accident_data$Light_Conditions != 'Darkness - lighti
 
 ```
 
-```{r}
-ggplot(data = accident_data) +
-  geom_point(mapping = aes(x = X1st_Road_Number, y = X2nd_Road_Number), alpha = 0.007)
-```
-
-```{r}
-library(leaflet)
-```
-
-```{r}
-m = leaflet() %>% addTiles() 
-m %>% addPolygons(lng = contrib.pc.find.dt$lng[1:5243] , lat = contrib.pc.find.dt$lat[1:5243] , fillColor = "blue" , color = "black", weight = 1)
-```

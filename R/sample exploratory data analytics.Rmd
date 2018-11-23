@@ -1,5 +1,25 @@
+
 ```{r}
-my_data<-read.csv('Accident_Information.csv')
+library(tidyverse)
+library(ggmap)
+library(DataExplorer)
+library(MASS)
+library(gridExtra)
+library(ggtern)
+library(leaflet)
+library(mice)
+library(data.table)
+library(sp)
+library(RCurl)
+library(RJSONIO)
+library(KernSmooth)
+library(lubridate)
+library(rworldmap)
+```
+
+
+```{r}
+my_data<-read_csv('../data/Accident_Information.csv.bz2')
 summary(my_data)
 ```
 ```{r}
@@ -12,7 +32,7 @@ ggplot(day_wise_accidents, aes(fill=Accident_Severity, y=Accident_Index, x=Day_o
 ```
 ```{r}
 data_2012<-my_data[my_data$Year==2012,]
-library(rworldmap)
+
 newmap <- getMap(resolution = "high")
 plot(newmap, xlim = c(-3, 2), ylim = c(50, 59),asp = 1)
 title("Spread of Accidents accross U.K in 2012")

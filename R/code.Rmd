@@ -1,5 +1,5 @@
 ```{r}
-my_data<-read.csv('Accident_Information.csv')
+my_data<-read.csv('../data/Accident_Information.csv.bz2')
 summary(my_data)
 ```
 

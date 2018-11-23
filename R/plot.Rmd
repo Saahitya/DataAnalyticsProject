@@ -1,4 +1,21 @@
 
+```{r}
+library(tidyverse)
+library(ggmap)
+library(DataExplorer)
+library(MASS)
+library(gridExtra)
+library(ggtern)
+library(leaflet)
+library(mice)
+library(data.table)
+library(sp)
+library(RCurl)
+library(RJSONIO)
+library(KernSmooth)
+library(lubridate)
+```
+
 
 ```{r}
 #library(ggmap)
@@ -25,9 +42,6 @@
 ```
 
 ```{r}
-library(RCurl)
-library(RJSONIO)
-library(plyr)
  
 #url <- function(address, return.call = "json", sensor = "false") {
 # root <- "http://maps.google.com/maps/api/geocode/"
@@ -111,22 +125,33 @@ leaflet(spgons) %>% addTiles() %>%
     addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
 ```
 
+
+
 ```{r}
 library(tidyverse)
 library(ggmap)
+library(DataExplorer)
 library(MASS)
 library(gridExtra)
 library(ggtern)
 library(leaflet)
-library(devtools)
+library(mice)
+library(data.table)
+library(sp)
+library(RCurl)
+library(RJSONIO)
+library(KernSmooth)
+library(lubridate)
 ```
 
 ```{r}
-dacc <- read_csv("../../Accident_Information.csv")
-dveh <- read_csv("../../Vehicle_Information.csv")
+dacc <- read_csv("../data/Accident_Information.csv.bz2")
+dveh <- read_csv("../data/Vehicle_Information.csv.bz2")
 
 accident_data <- dacc
 vehicle_data <- dveh
+names(accident_data)[15] = "Local_Authority_.District."
+names(accident_data)[16] = "Local_Authority_.Highway."
 district = NULL
 
 ```
@@ -137,10 +162,13 @@ district = NULL
 
 accident_data <- drop_na(accident_data, Latitude)
 accident_data <- drop_na(accident_data, Longitude)
+names(accident_data)[15] = "Local_Authority_.District."
+names(accident_data)[16] = "Local_Authority_.Highway."
 
   accident_data$Accident_Severity = factor(accident_data$Accident_Severity,order = TRUE,levels = c("Slight","Serious","Fatal"))
   accident_data[["1st_Road_Class"]] = factor(accident_data[["1st_Road_Class"]])
   accident_data$Light_Conditions = factor(accident_data$Light_Conditions)
+  accident_data[["Local_Authority_.District."]] = factor(accident_data[["Local_Authority_.District."]])
   accident_data$Day_of_Week = factor(accident_data$Day_of_Week)
   accident_data$Urban_or_Rural_Area = factor(accident_data$Urban_or_Rural_Area)
   accident_data$Weather_Conditions = factor(accident_data$Weather_Conditions)
@@ -149,7 +177,7 @@ accident_data <- drop_na(accident_data, Longitude)
   accident_data$Road_Type = factor(accident_data$Road_Type)
   accident_data$InScotland = factor(accident_data$InScotland)
   accident_data$Carriageway_Hazards = factor(accident_data$Carriageway_Hazards)
-  accident_data[["2nd_Road_Class"]] = factor(accident_data[["2nd_Road_Class"]])
+  #accident_data[["2nd_Road_Class"]] = factor(accident_data[["2nd_Road_Class"]])
   accident_data$Special_Conditions_at_Site = factor(accident_data$Special_Conditions_at_Site)
   accident_data$Police_Force = factor(accident_data$Police_Force)
   #str(accident_data)
@@ -170,11 +198,34 @@ accident_data <- drop_na(accident_data, Longitude)
   #str(vehicle_data)
 
 
-```
+all_the_data <- inner_join(
+  accident_data[which(!is.na(accident_data$Accident_Index)),],
+  vehicle_data[which(!is.na(vehicle_data$Accident_Index)),])
 
-```{r}
-names(accident_data)[15] = "Local_Authority_.District."
-names(accident_data)[16] = "Local_Authority_.Highway."
+myData <- all_the_data
+
+hrs <- hour(myData$Time)
+hrs <- as.numeric(hrs)
+
+eve <- c(16:20)
+morn <- c(6:11)
+after <- c(12:15)
+lnight <- c(21:23)
+hnight <- c(0:5)
+val_timings <- c("16 - 20","6 - 11","0 - 5","12 - 15","21 - 23")
+
+myData = myData%>%
+  mutate(timing = case_when(
+    as.numeric(hour(myData$Time)) %in% eve ~ "16 - 20",
+    as.numeric(hour(myData$Time)) %in% morn ~ "6 - 11",
+    as.numeric(hour(myData$Time)) %in% hnight ~ "0 - 5",
+    as.numeric(hour(myData$Time)) %in% lnight ~ "21 - 23",
+    as.numeric(hour(myData$Time)) %in% after ~ "12 - 15"
+  ))
+
+myData$timing = factor(myData$timing , order = TRUE, levels = c("0 - 5","6 - 11","12 - 15","16 - 20","21 - 23"))
+
+
 ```
 
 ```{r}
@@ -188,8 +239,9 @@ void_froad = c("Unclassified")
 ```
 
 ```{r}
-
+plot_missing(accident_data)
 accident_data["2nd_Road_Class"] = NULL
+accident_data["LSOA_of_Accident_Location"] = NULL
 
 ```
 
@@ -208,7 +260,9 @@ add.alpha <- function(COLORS, ALPHA){
 ```{r}
 KDPL <- function(nos){
   ryedale_data <- accident_data[accident_data$Local_Authority_.District. == district,]
-  ryedale_data$w1 <- NA
+  w1 <- c(0)
+  ryedale_data <- cbind(ryedale,w1)
+  #ryedale_data$w1 <- NA
   ryedale_data[ryedale_data$Accident_Severity == "Fatal", "w1"] <- 3
   ryedale_data[ryedale_data$Accident_Severity == "Serious", "w1"] <- 2
   ryedale_data[ryedale_data$Accident_Severity == "Slight", "w1"] <- 1
@@ -233,7 +287,8 @@ KDPL <- function(nos){
   
   ## Leaflet map with polygons
   leaflet(spgons) %>% addTiles() %>% 
-      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])s
+      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+  #return (w1_f2)
 }
 
 ```
@@ -242,34 +297,140 @@ KDPL <- function(nos){
 
 
 ```{r}
-
-head(accident_data$Local_Authority_.District.)
 district = accident_data$Local_Authority_.District.[1]
 system.time(KDPL(1000))
 
 ```
 
+
+
+
 ```{r}
+
+glasgow_city <- myData%>%
+  filter(Local_Authority_.District. == "Glasgow City")
+
+ryedale <- myData%>%
+  filter(Local_Authority_.District. == "Ryedale")
+
+city_of_london <- myData%>%
+  filter(Local_Authority_.District. == "City of London")
+
+
+```
+
+```{r}
+validGender <- c("Male","Female")
+what1 <- c("Accident_Index","Accident_Severity")
+what2 <- c("Accident_Index","Sex_of_Driver","Age_Band_of_Driver")
+
+severityData <- subset(glasgow_city,select = what1)
+genderAge <- subset(glasgow_city,select = what2)%>%
+              filter(Sex_of_Driver %in% validGender & Age_Band_of_Driver != DMOR)
+
+plotData <- inner_join(severityData,genderAge)
+
+plt <- ggplot(plotData,aes(x = Age_Band_of_Driver,fill = Accident_Severity))+geom_bar()+facet_wrap(~Sex_of_Driver)
+plt <- plt + labs(title = "Accident comparison amongst the genders for Glasgow City")
+plt
 
 ```
 
 ```{r}
 
+
+what1 <- c("Accident_Index","Accident_Severity")
+what2 <- c("Accident_Index","Sex_of_Driver","Age_Band_of_Driver")
+
+severityData <- subset(glasgow_city,select = what1)
+
+genderData <- subset(glasgow_city,select = c("Accident_Index","Sex_of_Driver"))%>%
+  filter(Sex_of_Driver %in% validGender)
+
+plotData <- inner_join(severityData,genderData)
+
+plt <- ggplot(plotData,aes(x = Accident_Severity))+geom_bar()
+plt <- plt + labs(title = "Accident comparison amongst the genders")
+plt
+
+```
+
+
+```{r}
+
+glasgow_city%>%
+  filter(!is.na(Year))%>%
+  group_by(Year)%>%
+  summarise(accidents = n())%>%
+  ggplot(.,aes(x = Year,y = accidents,color = Year))+
+  geom_line()+geom_point()+labs(title = "Glasgow City : Accidents over the years")
+
+xd <- glasgow_city%>%
+  filter(!is.na(Year))%>%
+  group_by(Year)%>%
+  summarise(accidents = n())
+xd
+
+```
+
+```{r}
+nac <- myData
+
+nac <- nac%>%
+  filter(!is.na(timing) & !(Sex_of_Driver %in% void_common))
+
+
+what1 <- c("Accident_Index","Sex_of_Driver")
+what2 <- c("Accident_Index","timing")
+toUse <- subset(nac,select = c("Accident_Index","Sex_of_Driver","timing","Year") )
+
+pl2 <- toUse%>%
+  group_by(timing)%>%
+  ggplot(.,aes(x=timing,fill = timing)) +
+  theme_bw()+
+  facet_wrap(~Sex_of_Driver)+
+  geom_bar()+labs(title = "Comparision of accidents at different time-of-day and the genders")
+
+pl2
+
 ```
 
 ```{r}
 
-```
+KDEP <- function(year){
+ 
+  dist_data <- myData[myData$Local_Authority_.District. == district & myData$Year == year,]
+  dist_data$w1 <- NA
+  dist_data[dist_data$Accident_Severity == "Fatal", "w1"] <- 3
+  dist_data[dist_data$Accident_Severity == "Serious", "w1"] <- 2
+  dist_data[dist_data$Accident_Severity == "Slight", "w1"] <- 1
+  f1 <- kde2d(dist_data$Latitude, dist_data$Longitude, n = 1000)
+  w1_f2 <- kde2d.weighted(dist_data$Latitude, dist_data$Longitude, n = 1000, w = dist_data$w1)
+  pal <- rainbow(20)
+  COLORS <- add.alpha(pal, 1)
+  par(pty = "s", mfrow = c(1, 2))
+  image(f1, col = COLORS)
+  image(w1_f2, col = COLORS)
+  
+  CL <- contourLines(w1_f2$y , w1_f2$x , w1_f2$z)
+  
+  ## EXTRACT CONTOUR LINE LEVELS
+  LEVS <- as.factor(sapply(CL, `[[`, "level"))
+  NLEV <- length(levels(LEVS))
+  
+  ## CONVERT CONTOUR LINES TO POLYGONS
+  pgons <- lapply(1:length(CL), function(i)
+      Polygons(list(Polygon(cbind(CL[[i]]$x, CL[[i]]$y))), ID=i))
+  spgons = SpatialPolygons(pgons)
+  
+  ## Leaflet map with polygons
+  xx <- leaflet(spgons) %>% addTiles() %>% 
+      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
+  print(xx)
+  #return (w1_f2)
 
-```{r}
+}
 
-```
-
-```{r}
-
-```
-
-```{r}
-
+ 
 ```
 
