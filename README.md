@@ -21,3 +21,7 @@ https://www.kaggle.com/saahitya/kernels
   Vehicle_Information.csv.bz2
 ### '/R'
   Contains the relevant code ,plots and analysis in the project.
+### '/doc'
+  Contains the papers required and referred for the project.
+### '/figures'
+  Contains the plot images based on the analysis carried out.
