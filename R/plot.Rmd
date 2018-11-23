@@ -118,6 +118,7 @@ library(MASS)
 library(gridExtra)
 library(ggtern)
 library(leaflet)
+library(devtools)
 ```
 
 ```{r}
@@ -232,8 +233,7 @@ KDPL <- function(nos){
   
   ## Leaflet map with polygons
   leaflet(spgons) %>% addTiles() %>% 
-      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])
-  #return (w1_f2)
+      addPolygons(color = heat.colors(NLEV, NULL)[LEVS])s
 }
 
 ```
