@@ -12,6 +12,9 @@ https://www.kaggle.com/tsiaras/uk-road-safety-accidents-and-vehicles
 ## Link to Kernel on Kaggle
 https://www.kaggle.com/saahitya/kernels
 
+## Video Link
+https://youtu.be/AMAe-UkyZIE
+
 ## Instructions
 ### '/data' 
   Contains the dataset required for this project - 
